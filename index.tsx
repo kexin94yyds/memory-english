@@ -86,11 +86,27 @@ const App = () => {
       const isUrl = inputType === 'url';
       const youtubeId = isUrl ? getYouTubeId(inputText) : null;
       
+      // If it's a YouTube URL, try to fetch real transcript from backend first
+      let contentForAnalysis = inputText;
+      if (youtubeId) {
+        try {
+          const res = await fetch(`/.netlify/functions/youtubeTranscript?videoId=${youtubeId}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data.transcript && typeof data.transcript === 'string') {
+              contentForAnalysis = data.transcript;
+            }
+          }
+        } catch (err) {
+          console.error('Failed to fetch YouTube transcript, falling back to URL text', err);
+        }
+      }
+
       const prompt = `
         You are an expert language tutor.
         
         Input (original user content, may be article text, transcript text, or extracted text from a URL):
-        "${inputText.slice(0, 30000)}"
+        "${contentForAnalysis.slice(0, 30000)}"
         Type: ${isUrl ? 'URL (Infer content)' : 'Raw Text'}
         
         Tasks:
