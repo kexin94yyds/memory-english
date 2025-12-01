@@ -13,7 +13,8 @@ export const handler: Handler = async (event) => {
   }
 
   try {
-    const url = `https://www.youtube.com/api/timedtext?lang=en&v=${videoId}&fmt=json3`;
+    // Request WebVTT subtitles (plain text). Gemini can handle timestamped text directly.
+    const url = `https://www.youtube.com/api/timedtext?lang=en&v=${videoId}&fmt=vtt`;
     const res = await fetch(url);
 
     if (!res.ok) {
@@ -26,15 +27,7 @@ export const handler: Handler = async (event) => {
       };
     }
 
-    const data = await res.json() as any;
-    const events = Array.isArray(data.events) ? data.events : [];
-
-    const transcriptText = events
-      .flatMap((event: any) => Array.isArray(event.segs) ? event.segs : [])
-      .map((seg: any) => typeof seg.utf8 === 'string' ? seg.utf8 : '')
-      .join(' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const transcriptText = (await res.text()).trim();
 
     return {
       statusCode: 200,
