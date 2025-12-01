@@ -588,14 +588,20 @@ const FlashCard: React.FC<{ word: VocabWord, sourceUrl?: string, sourceType?: st
 
   const handleTouchEnd = () => {
     setIsDragging(false);
-    setDragX(0);
+    if (Math.abs(dragX) > 100) {
+      handleSwipe(dragX > 0 ? 'right' : 'left');
+    } else {
+      setDragX(0); 
+    }
   };
 
   const handleSwipe = (direction: 'left' | 'right') => {
-    // 直接切换到下一个单词，不做左右滑动动画，避免桌面点击时卡片“飞走”
-    setDragX(0);
-    if (direction === 'right') onGotIt();
-    else onForgot();
+    const endX = direction === 'right' ? 500 : -500;
+    setDragX(endX);
+    setTimeout(() => {
+        if (direction === 'right') onGotIt();
+        else onForgot();
+    }, 200);
   };
 
   const rotation = dragX * 0.05;
